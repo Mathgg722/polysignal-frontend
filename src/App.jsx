@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
 import Sinais from './pages/Sinais'
+import Mercados from './pages/Mercados'
 
 const BASE = 'https://polymarket-backend-bis2.onrender.com'
 export { BASE }
@@ -23,6 +24,7 @@ export default function App() {
           <nav style={{ display: 'flex', gap: 4 }}>
             {[
               { to: '/', label: 'Dashboard' },
+              { to: '/mercados', label: 'Mercados' },
               { to: '/sinais', label: 'Sinais' },
             ].map(({ to, label }) => (
               <NavLink key={to} to={to} end style={({ isActive }) => ({
@@ -37,6 +39,7 @@ export default function App() {
 
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/mercados" element={<Mercados />} />
           <Route path="/sinais" element={<Sinais />} />
         </Routes>
 
