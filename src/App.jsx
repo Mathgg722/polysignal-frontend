@@ -3,7 +3,7 @@ import Dashboard from './pages/Dashboard'
 import Sinais from './pages/Sinais'
 import Mercados from './pages/Mercados'
 
-const BASE = 'https://polymarket-backend-bis2.onrender.com'
+const BASE = 'https://polysignal-backend.onrender.com'
 export { BASE }
 
 export default function App() {
