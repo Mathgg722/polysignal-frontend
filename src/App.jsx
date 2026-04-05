@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
 import Sinais from './pages/Sinais'
 import Mercados from './pages/Mercados'
+import Narrative from './pages/Narrative'
+import Orphans from './pages/Orphans'
 
 const BASE = 'https://polysignal-backend.onrender.com'
 export { BASE }
@@ -26,6 +28,8 @@ export default function App() {
               { to: '/', label: 'Dashboard' },
               { to: '/mercados', label: 'Mercados' },
               { to: '/sinais', label: 'Sinais' },
+              { to: '/narrative', label: 'Narrativa' },
+              { to: '/orphans', label: 'Órfãos' },
             ].map(({ to, label }) => (
               <NavLink key={to} to={to} end style={({ isActive }) => ({
                 padding: '5px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500,
@@ -41,6 +45,8 @@ export default function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/mercados" element={<Mercados />} />
           <Route path="/sinais" element={<Sinais />} />
+          <Route path="/narrative" element={<Narrative />} />
+          <Route path="/orphans" element={<Orphans />} />
         </Routes>
 
       </div>
