@@ -4,6 +4,7 @@ import Sinais from './pages/Sinais'
 import Mercados from './pages/Mercados'
 import Narrative from './pages/Narrative'
 import Orphans from './pages/Orphans'
+import Reversion from './pages/Reversion'
 
 const BASE = 'https://polysignal-backend.onrender.com'
 export { BASE }
@@ -30,6 +31,7 @@ export default function App() {
               { to: '/sinais', label: 'Sinais' },
               { to: '/narrative', label: 'Narrativa' },
               { to: '/orphans', label: 'Órfãos' },
+              { to: '/reversion', label: 'Reversão' },
             ].map(({ to, label }) => (
               <NavLink key={to} to={to} end style={({ isActive }) => ({
                 padding: '5px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500,
@@ -47,6 +49,7 @@ export default function App() {
           <Route path="/sinais" element={<Sinais />} />
           <Route path="/narrative" element={<Narrative />} />
           <Route path="/orphans" element={<Orphans />} />
+          <Route path="/reversion" element={<Reversion />} />
         </Routes>
 
       </div>
