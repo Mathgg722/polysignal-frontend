@@ -6,6 +6,7 @@ import Narrative from './pages/Narrative'
 import Orphans from './pages/Orphans'
 import Reversion from './pages/Reversion'
 import Anomalies from './pages/Anomalies'
+import Recommendations from './pages/Recommendations'
 
 const BASE = 'https://polysignal-backend.onrender.com'
 export { BASE }
@@ -28,6 +29,7 @@ export default function App() {
           <nav style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
             {[
               { to: '/', label: 'Dashboard' },
+              { to: '/recommendations', label: '⚡ Apostas' },
               { to: '/mercados', label: 'Mercados' },
               { to: '/sinais', label: 'Sinais' },
               { to: '/anomalies', label: 'Anomalias' },
@@ -47,6 +49,7 @@ export default function App() {
 
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/recommendations" element={<Recommendations />} />
           <Route path="/mercados" element={<Mercados />} />
           <Route path="/sinais" element={<Sinais />} />
           <Route path="/anomalies" element={<Anomalies />} />
