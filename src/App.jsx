@@ -5,6 +5,7 @@ import Mercados from './pages/Mercados'
 import Narrative from './pages/Narrative'
 import Orphans from './pages/Orphans'
 import Reversion from './pages/Reversion'
+import Anomalies from './pages/Anomalies'
 
 const BASE = 'https://polysignal-backend.onrender.com'
 export { BASE }
@@ -24,14 +25,15 @@ export default function App() {
           <div style={{ fontWeight: 800, fontSize: 18, letterSpacing: '-0.03em' }}>
             Poly<span style={{ color: '#0a84ff' }}>Signal</span>
           </div>
-          <nav style={{ display: 'flex', gap: 4 }}>
+          <nav style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
             {[
               { to: '/', label: 'Dashboard' },
               { to: '/mercados', label: 'Mercados' },
               { to: '/sinais', label: 'Sinais' },
+              { to: '/anomalies', label: 'Anomalias' },
+              { to: '/reversion', label: 'Reversão' },
               { to: '/narrative', label: 'Narrativa' },
               { to: '/orphans', label: 'Órfãos' },
-              { to: '/reversion', label: 'Reversão' },
             ].map(({ to, label }) => (
               <NavLink key={to} to={to} end style={({ isActive }) => ({
                 padding: '5px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500,
@@ -47,9 +49,10 @@ export default function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/mercados" element={<Mercados />} />
           <Route path="/sinais" element={<Sinais />} />
+          <Route path="/anomalies" element={<Anomalies />} />
+          <Route path="/reversion" element={<Reversion />} />
           <Route path="/narrative" element={<Narrative />} />
           <Route path="/orphans" element={<Orphans />} />
-          <Route path="/reversion" element={<Reversion />} />
         </Routes>
 
       </div>
