@@ -15,7 +15,7 @@ function confColor(conf) {
 }
 
 function shortVol(v) {
-  if (!v) return null
+  if (!v || isNaN(v)) return '—'
   if (v >= 1_000_000) return '$' + (v / 1_000_000).toFixed(1) + 'M'
   if (v >= 1_000)     return '$' + (v / 1_000).toFixed(0) + 'k'
   return '$' + v.toFixed(0)
@@ -26,7 +26,7 @@ function calcReturn(price) {
   return ((100 / price - 1) * 100).toFixed(1)
 }
 
-function SectionHeader({ emoji, title, subtitle, count }) {
+function SectionHeader({ emoji, title, subtitle, count, badge }) {
   return (
     <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 14 }}>
       <span style={{ fontSize: 15 }}>{emoji}</span>
@@ -34,6 +34,12 @@ function SectionHeader({ emoji, title, subtitle, count }) {
         <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.02em' }}>{title}</span>
         {subtitle && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginLeft: 8 }}>{subtitle}</span>}
       </div>
+      {badge && (
+        <span style={{
+          fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 5,
+          background: badge.bg, color: badge.color, marginLeft: 4,
+        }}>{badge.text}</span>
+      )}
       {count != null && (
         <span style={{
           marginLeft: 'auto', fontSize: 11, fontWeight: 600,
@@ -56,18 +62,13 @@ function MarketCard({ m, showReturn }) {
   const ret       = showReturn ? calcReturn(sidePrice) : null
 
   return (
-    <a
-      href={`https://polymarket.com/market/${m.slug}`}
-      target="_blank" rel="noreferrer"
-      style={{ textDecoration: 'none', display: 'block' }}
-    >
-      <div
-        style={{
-          background: showReturn ? 'rgba(10,132,255,0.05)' : 'rgba(255,255,255,0.03)',
-          border: `1px solid ${showReturn ? 'rgba(10,132,255,0.2)' : 'rgba(255,255,255,0.07)'}`,
-          borderRadius: 12, padding: '12px 14px', marginBottom: 8,
-          transition: 'border-color 0.15s',
-        }}
+    <a href={`https://polymarket.com/market/${m.slug}`} target="_blank" rel="noreferrer"
+      style={{ textDecoration: 'none', display: 'block' }}>
+      <div style={{
+        background: showReturn ? 'rgba(10,132,255,0.05)' : 'rgba(255,255,255,0.03)',
+        border: `1px solid ${showReturn ? 'rgba(10,132,255,0.2)' : 'rgba(255,255,255,0.07)'}`,
+        borderRadius: 12, padding: '12px 14px', marginBottom: 8, transition: 'border-color 0.15s',
+      }}
         onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'}
         onMouseLeave={e => e.currentTarget.style.borderColor = showReturn ? 'rgba(10,132,255,0.2)' : 'rgba(255,255,255,0.07)'}
       >
@@ -77,12 +78,9 @@ function MarketCard({ m, showReturn }) {
           </p>
           <div style={{
             flexShrink: 0, fontSize: 12, fontWeight: 700,
-            background: cc + '20', color: cc,
-            border: `1px solid ${cc}44`,
+            background: cc + '20', color: cc, border: `1px solid ${cc}44`,
             borderRadius: 7, padding: '3px 9px',
-          }}>
-            {side} {conf}%
-          </div>
+          }}>{side} {conf}%</div>
         </div>
         <div style={{ height: 2, background: 'rgba(255,255,255,0.06)', borderRadius: 1, marginBottom: 9 }}>
           <div style={{ height: 2, width: conf + '%', background: cc, borderRadius: 1 }} />
@@ -94,13 +92,10 @@ function MarketCard({ m, showReturn }) {
           {vol && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)' }}>{vol}/24h</span>}
           {ret && (
             <span style={{
-              marginLeft: 'auto', fontSize: 11, fontWeight: 600,
-              color: '#30d158', background: 'rgba(48,209,88,0.1)',
-              border: '1px solid rgba(48,209,88,0.2)',
+              marginLeft: 'auto', fontSize: 11, fontWeight: 600, color: '#30d158',
+              background: 'rgba(48,209,88,0.1)', border: '1px solid rgba(48,209,88,0.2)',
               borderRadius: 6, padding: '2px 7px',
-            }}>
-              $100 → ${(100 + parseFloat(ret)).toFixed(0)} (+{ret}%)
-            </span>
+            }}>$100 → ${(100 + parseFloat(ret)).toFixed(0)} (+{ret}%)</span>
           )}
           {!ret && <span style={{ marginLeft: 'auto', fontSize: 11, color: '#0a84ff' }}>Ver →</span>}
         </div>
@@ -119,15 +114,11 @@ function SignalCard({ s }) {
   const ret    = price ? calcReturn(price) : null
 
   return (
-    <a
-      href={s.slug ? `https://polymarket.com/market/${s.slug}` : '#'}
-      target="_blank" rel="noreferrer"
-      style={{ textDecoration: 'none', display: 'block' }}
-    >
+    <a href={s.slug ? `https://polymarket.com/market/${s.slug}` : '#'} target="_blank" rel="noreferrer"
+      style={{ textDecoration: 'none', display: 'block' }}>
       <div style={{
         background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
-        borderRadius: 12, padding: '11px 14px', marginBottom: 8,
-        transition: 'border-color 0.15s',
+        borderRadius: 12, padding: '11px 14px', marginBottom: 8, transition: 'border-color 0.15s',
       }}
         onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.16)'}
         onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'}
@@ -156,12 +147,72 @@ function SignalCard({ s }) {
   )
 }
 
-const REFRESH_INTERVAL = 60 // segundos
+function NicheCard({ m }) {
+  const isBuy    = m.signal === 'BUY'
+  const color    = isBuy ? '#30d158' : m.signal === 'SELL' ? '#ff453a' : '#ff9f0a'
+  const arrow    = isBuy ? '↑' : m.signal === 'SELL' ? '↓' : '→'
+  const price    = isBuy ? m.yes_price : m.no_price
+  const ret      = calcReturn(price)
+  const tierCor  = m.tier_cor || '#0a84ff'
+  const uc       = urgencyColor(m.days_to_close)
+
+  return (
+    <a href={`https://polymarket.com/market/${m.slug}`} target="_blank" rel="noreferrer"
+      style={{ textDecoration: 'none', display: 'block' }}>
+      <div style={{
+        background: 'rgba(255,255,255,0.03)',
+        border: `1px solid ${tierCor}33`,
+        borderLeft: `3px solid ${tierCor}`,
+        borderRadius: 12, padding: '11px 14px', marginBottom: 8, transition: 'border-color 0.15s',
+      }}
+        onMouseEnter={e => e.currentTarget.style.borderColor = tierCor + '66'}
+        onMouseLeave={e => e.currentTarget.style.borderColor = tierCor + '33'}
+      >
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
+          <div style={{
+            flexShrink: 0, width: 28, height: 28, borderRadius: 7,
+            background: color + '18', color,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 14, fontWeight: 700,
+          }}>{arrow}</div>
+          <p style={{ flex: 1, fontSize: 13, fontWeight: 500, lineHeight: 1.35, margin: 0, color: '#f5f5f7' }}>
+            {m.question}
+          </p>
+          <div style={{
+            flexShrink: 0, fontSize: 11, fontWeight: 700,
+            background: tierCor + '22', color: tierCor,
+            border: `1px solid ${tierCor}44`, borderRadius: 6, padding: '2px 7px',
+          }}>{m.tier_label}</div>
+        </div>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>
+            Edge score: <b style={{ color: '#f5f5f7' }}>{m.opp_score}</b>
+          </span>
+          <span style={{ fontSize: 11, fontWeight: 600, color: uc }}>
+            ● {m.days_to_close <= 1 ? 'hoje' : m.days_to_close <= 7 ? `${m.days_to_close}d` : `${m.days_to_close} dias`}
+          </span>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{shortVol(m.volume_24h)}/24h</span>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>acurácia {m.tier_acuracia}</span>
+          {ret && (
+            <span style={{
+              marginLeft: 'auto', fontSize: 11, fontWeight: 600, color: '#30d158',
+              background: 'rgba(48,209,88,0.1)', border: '1px solid rgba(48,209,88,0.2)',
+              borderRadius: 6, padding: '2px 7px',
+            }}>+{ret}%</span>
+          )}
+        </div>
+      </div>
+    </a>
+  )
+}
+
+const REFRESH_INTERVAL = 60
 
 export default function Radar() {
   const [markets,   setMarkets]   = useState([])
   const [signals,   setSignals]   = useState([])
   const [anomalies, setAnomalies] = useState([])
+  const [niche,     setNiche]     = useState([])
   const [loading,   setLoading]   = useState(true)
   const [lastUpdate,setLastUpdate]= useState(null)
   const [countdown, setCountdown] = useState(REFRESH_INTERVAL)
@@ -173,7 +224,8 @@ export default function Radar() {
       fetch(`${BASE}/markets?max_days=365`).then(r => r.json()),
       fetch(`${BASE}/signals`).then(r => r.json()),
       fetch(`${BASE}/anomalies`).then(r => r.json()),
-    ]).then(([mRes, sRes, aRes]) => {
+      fetch(`${BASE}/niche?max_days=90`).then(r => r.json()),
+    ]).then(([mRes, sRes, aRes, nRes]) => {
       if (mRes.status === 'fulfilled') setMarkets(Array.isArray(mRes.value) ? mRes.value : [])
       if (sRes.status === 'fulfilled') {
         const v = sRes.value
@@ -183,6 +235,7 @@ export default function Radar() {
         const v = aRes.value
         setAnomalies(Array.isArray(v) ? v : (v?.anomalies || []))
       }
+      if (nRes.status === 'fulfilled') setNiche(Array.isArray(nRes.value) ? nRes.value : [])
       setLastUpdate(new Date())
       setCountdown(REFRESH_INTERVAL)
       setLoading(false)
@@ -190,16 +243,13 @@ export default function Radar() {
     })
   }, [])
 
-  // fetch inicial
   useEffect(() => { fetchData() }, [fetchData])
 
-  // auto-refresh a cada 60s
   useEffect(() => {
     const interval = setInterval(() => fetchData(), REFRESH_INTERVAL * 1000)
     return () => clearInterval(interval)
   }, [fetchData])
 
-  // countdown visual
   useEffect(() => {
     const tick = setInterval(() => {
       setCountdown(c => c <= 1 ? REFRESH_INTERVAL : c - 1)
@@ -214,11 +264,11 @@ export default function Radar() {
     .slice(0, 5)
   const topVol   = [...markets].sort((a,b) => (b.volume_24h||0) - (a.volume_24h||0)).slice(0, 4)
   const totalHC  = markets.filter(m => Math.max(m.yes_price||0,m.no_price||0) >= 80).length
+  const nicheTop = niche.slice(0, 6)
 
   const timeStr = lastUpdate
     ? lastUpdate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
     : '—'
-
   const dateStr = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
 
   if (loading) return (
@@ -243,8 +293,6 @@ export default function Radar() {
             {dateStr}
           </p>
         </div>
-
-        {/* status + refresh */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', textAlign: 'right' }}>
             <div>atualizado às {timeStr}</div>
@@ -252,18 +300,12 @@ export default function Radar() {
               próximo em {countdown}s
             </div>
           </div>
-          <button
-            onClick={() => fetchData(true)}
-            disabled={refreshing}
-            style={{
-              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: 8, padding: '6px 12px', color: 'rgba(255,255,255,0.6)',
-              fontSize: 12, cursor: refreshing ? 'default' : 'pointer',
-              opacity: refreshing ? 0.5 : 1, transition: 'opacity 0.2s',
-            }}
-          >
-            {refreshing ? '...' : '↻ Atualizar'}
-          </button>
+          <button onClick={() => fetchData(true)} disabled={refreshing} style={{
+            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: 8, padding: '6px 12px', color: 'rgba(255,255,255,0.6)',
+            fontSize: 12, cursor: refreshing ? 'default' : 'pointer',
+            opacity: refreshing ? 0.5 : 1, transition: 'opacity 0.2s',
+          }}>{refreshing ? '...' : '↻ Atualizar'}</button>
         </div>
       </div>
 
@@ -285,14 +327,31 @@ export default function Radar() {
         ))}
       </div>
 
-      {/* grid responsivo */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-        gap: 24,
-      }}>
+      {/* ZONA DE EDGE — Órfãos e Niche (destaque) */}
+      {nicheTop.length > 0 && (
+        <div style={{
+          background: 'rgba(191,90,242,0.05)',
+          border: '1px solid rgba(191,90,242,0.2)',
+          borderRadius: 14, padding: '16px 18px', marginBottom: 24,
+        }}>
+          <SectionHeader
+            emoji="🔍"
+            title="Zona de Edge — Mercados Órfãos & Niche"
+            subtitle="máx. $500k volume · 62-68% acurácia histórica"
+            count={niche.length}
+            badge={{ text: 'MAIOR OPORTUNIDADE', bg: 'rgba(191,90,242,0.2)', color: '#bf5af2' }}
+          />
+          <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginBottom: 12, marginTop: -6 }}>
+            Mercados institucionais têm 95% de acurácia — edge zero. Aqui o mercado ainda é ineficiente.
+          </p>
+          {nicheTop.map(m => <NicheCard key={m.slug} m={m} />)}
+        </div>
+      )}
 
-        {/* APOSTAR AGORA */}
+      {/* grid 2 colunas */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 24 }}>
+
+        {/* ESQUERDA */}
         <div>
           <div style={{ marginBottom: 28 }}>
             <SectionHeader emoji="🎯" title="Apostar agora" subtitle="confiança ≥85% · retorno calculado" count={highConf.length} />
@@ -311,7 +370,7 @@ export default function Radar() {
           </div>
         </div>
 
-        {/* FECHANDO + VOLUME */}
+        {/* DIREITA */}
         <div>
           <div style={{ marginBottom: 28 }}>
             <SectionHeader emoji="🔥" title="Fechando esta semana" count={urgent.length} />
@@ -328,7 +387,7 @@ export default function Radar() {
 
           {anomalies.length > 0 && (
             <div style={{ marginBottom: 28 }}>
-              <SectionHeader emoji="🔍" title="Anomalias detectadas" count={anomalies.length} />
+              <SectionHeader emoji="📊" title="Anomalias detectadas" count={anomalies.length} />
               {anomalies.slice(0, 3).map((a, i) => <SignalCard key={i} s={a} />)}
             </div>
           )}
@@ -341,7 +400,7 @@ export default function Radar() {
         fontSize: 11, color: 'rgba(255,255,255,0.18)',
         display: 'flex', justifyContent: 'space-between',
       }}>
-        <span>PolySignal · dados via Polymarket</span>
+        <span>PolySignal v3.1 · Neon + Render</span>
         <span>Não é conselho financeiro</span>
       </div>
     </div>
