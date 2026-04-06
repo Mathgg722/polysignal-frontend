@@ -2,11 +2,10 @@ import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
 import Sinais from './pages/Sinais'
 import Mercados from './pages/Mercados'
-import Narrative from './pages/Narrative'
-import Orphans from './pages/Orphans'
 import Reversion from './pages/Reversion'
 import Anomalies from './pages/Anomalies'
 import Recommendations from './pages/Recommendations'
+import ClosingSoon from './pages/ClosingSoon'
 
 const BASE = 'https://polysignal-backend.onrender.com'
 export { BASE }
@@ -30,12 +29,11 @@ export default function App() {
             {[
               { to: '/', label: 'Dashboard' },
               { to: '/recommendations', label: '⚡ Apostas' },
+              { to: '/closing', label: '🔥 Fechando' },
               { to: '/mercados', label: 'Mercados' },
               { to: '/sinais', label: 'Sinais' },
               { to: '/anomalies', label: 'Anomalias' },
               { to: '/reversion', label: 'Reversão' },
-              { to: '/narrative', label: 'Narrativa' },
-              { to: '/orphans', label: 'Órfãos' },
             ].map(({ to, label }) => (
               <NavLink key={to} to={to} end style={({ isActive }) => ({
                 padding: '5px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500,
@@ -50,12 +48,11 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/recommendations" element={<Recommendations />} />
+          <Route path="/closing" element={<ClosingSoon />} />
           <Route path="/mercados" element={<Mercados />} />
           <Route path="/sinais" element={<Sinais />} />
           <Route path="/anomalies" element={<Anomalies />} />
           <Route path="/reversion" element={<Reversion />} />
-          <Route path="/narrative" element={<Narrative />} />
-          <Route path="/orphans" element={<Orphans />} />
         </Routes>
 
       </div>
