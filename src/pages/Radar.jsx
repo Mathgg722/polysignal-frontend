@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { BASE } from '../App'
 
 function urgencyColor(days) {
@@ -21,7 +21,6 @@ function shortVol(v) {
   return '$' + v.toFixed(0)
 }
 
-// retorno bruto se resolver a favor (ex: compra YES a 0.94 → +6.4%)
 function calcReturn(price) {
   if (!price || price <= 0 || price >= 100) return null
   return ((100 / price - 1) * 100).toFixed(1)
@@ -85,19 +84,14 @@ function MarketCard({ m, showReturn }) {
             {side} {conf}%
           </div>
         </div>
-
-        {/* barra de confiança */}
         <div style={{ height: 2, background: 'rgba(255,255,255,0.06)', borderRadius: 1, marginBottom: 9 }}>
           <div style={{ height: 2, width: conf + '%', background: cc, borderRadius: 1 }} />
         </div>
-
         <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
           <span style={{ fontSize: 11, fontWeight: 600, color: uc }}>
             ● {m.days_to_close <= 1 ? 'fecha hoje' : m.days_to_close <= 7 ? `fecha em ${m.days_to_close}d` : `${m.days_to_close} dias`}
           </span>
           {vol && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)' }}>{vol}/24h</span>}
-
-          {/* retorno esperado */}
           {ret && (
             <span style={{
               marginLeft: 'auto', fontSize: 11, fontWeight: 600,
@@ -108,7 +102,6 @@ function MarketCard({ m, showReturn }) {
               $100 → ${(100 + parseFloat(ret)).toFixed(0)} (+{ret}%)
             </span>
           )}
-
           {!ret && <span style={{ marginLeft: 'auto', fontSize: 11, color: '#0a84ff' }}>Ver →</span>}
         </div>
       </div>
@@ -117,15 +110,13 @@ function MarketCard({ m, showReturn }) {
 }
 
 function SignalCard({ s }) {
-  // suporte a formato {signal:"BUY"} e {direction:"bullish"}
-  const isBuy = s.signal === 'BUY' || s.direction === 'bullish'
-  const isSell= s.signal === 'SELL' || s.direction === 'bearish'
-  const color = isBuy ? '#30d158' : isSell ? '#ff453a' : '#ff9f0a'
-  const arrow = isBuy ? '↑' : isSell ? '↓' : '→'
-  const label = isBuy ? 'COMPRAR' : isSell ? 'VENDER' : 'NEUTRO'
-  const conf  = s.confidence ?? (isBuy ? s.yes_price : s.no_price) ?? null
-  const price = isBuy ? s.yes_price : s.no_price
-  const ret   = price ? calcReturn(price) : null
+  const isBuy  = s.signal === 'BUY' || s.direction === 'bullish'
+  const isSell = s.signal === 'SELL' || s.direction === 'bearish'
+  const color  = isBuy ? '#30d158' : isSell ? '#ff453a' : '#ff9f0a'
+  const arrow  = isBuy ? '↑' : isSell ? '↓' : '→'
+  const label  = isBuy ? 'COMPRAR' : isSell ? 'VENDER' : 'NEUTRO'
+  const price  = isBuy ? s.yes_price : s.no_price
+  const ret    = price ? calcReturn(price) : null
 
   return (
     <a
@@ -144,28 +135,19 @@ function SignalCard({ s }) {
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
           <div style={{
             flexShrink: 0, width: 30, height: 30, borderRadius: 8,
-            background: color + '18', color: color,
+            background: color + '18', color,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 15, fontWeight: 700,
-          }}>
-            {arrow}
-          </div>
+          }}>{arrow}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ margin: '0 0 3px', fontSize: 13, fontWeight: 500, color: '#f5f5f7', lineHeight: 1.35 }}>
+            <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 500, color: '#f5f5f7', lineHeight: 1.35 }}>
               {s.question || s.market || s.title || 'Sinal detectado'}
             </p>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
               <span style={{ fontSize: 11, fontWeight: 600, color, background: color + '18', borderRadius: 5, padding: '1px 6px' }}>
                 {label}
               </span>
-              {conf != null && (
-                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>
-                  confiança {conf.toFixed(1)}%
-                </span>
-              )}
-              {ret && (
-                <span style={{ fontSize: 11, color: '#30d158' }}>+{ret}%</span>
-              )}
+              {ret && <span style={{ fontSize: 11, color: '#30d158' }}>+{ret}%</span>}
             </div>
           </div>
         </div>
@@ -174,14 +156,19 @@ function SignalCard({ s }) {
   )
 }
 
+const REFRESH_INTERVAL = 60 // segundos
+
 export default function Radar() {
   const [markets,   setMarkets]   = useState([])
   const [signals,   setSignals]   = useState([])
   const [anomalies, setAnomalies] = useState([])
   const [loading,   setLoading]   = useState(true)
-  const [now] = useState(new Date())
+  const [lastUpdate,setLastUpdate]= useState(null)
+  const [countdown, setCountdown] = useState(REFRESH_INTERVAL)
+  const [refreshing,setRefreshing]= useState(false)
 
-  useEffect(() => {
+  const fetchData = useCallback((isManual = false) => {
+    if (isManual) setRefreshing(true)
     Promise.allSettled([
       fetch(`${BASE}/markets?max_days=365`).then(r => r.json()),
       fetch(`${BASE}/signals`).then(r => r.json()),
@@ -196,8 +183,28 @@ export default function Radar() {
         const v = aRes.value
         setAnomalies(Array.isArray(v) ? v : (v?.anomalies || []))
       }
+      setLastUpdate(new Date())
+      setCountdown(REFRESH_INTERVAL)
       setLoading(false)
+      setRefreshing(false)
     })
+  }, [])
+
+  // fetch inicial
+  useEffect(() => { fetchData() }, [fetchData])
+
+  // auto-refresh a cada 60s
+  useEffect(() => {
+    const interval = setInterval(() => fetchData(), REFRESH_INTERVAL * 1000)
+    return () => clearInterval(interval)
+  }, [fetchData])
+
+  // countdown visual
+  useEffect(() => {
+    const tick = setInterval(() => {
+      setCountdown(c => c <= 1 ? REFRESH_INTERVAL : c - 1)
+    }, 1000)
+    return () => clearInterval(tick)
   }, [])
 
   const urgent   = markets.filter(m => m.days_to_close <= 7).sort((a,b) => a.days_to_close - b.days_to_close)
@@ -208,8 +215,11 @@ export default function Radar() {
   const topVol   = [...markets].sort((a,b) => (b.volume_24h||0) - (a.volume_24h||0)).slice(0, 4)
   const totalHC  = markets.filter(m => Math.max(m.yes_price||0,m.no_price||0) >= 80).length
 
-  const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-  const dateStr = now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
+  const timeStr = lastUpdate
+    ? lastUpdate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    : '—'
+
+  const dateStr = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
 
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
@@ -224,37 +234,65 @@ export default function Radar() {
     <div style={{ maxWidth: 920, margin: '0 auto', padding: '28px 20px 60px' }}>
 
       {/* cabeçalho */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.03em', margin: '0 0 4px' }}>
             Radar <span style={{ color: '#0a84ff' }}>PolySignal</span>
           </h1>
           <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', margin: 0, textTransform: 'capitalize' }}>
-            {dateStr} · atualizado às {timeStr}
+            {dateStr}
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {[
-            { label: 'mercados ativos', value: markets.length },
-            { label: 'alta confiança', value: totalHC },
-            { label: 'fechando em 7d', value: urgent.length },
-            { label: 'sinais ativos', value: signals.length },
-          ].map(({ label, value }) => (
-            <div key={label} style={{
-              background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)',
-              borderRadius: 10, padding: '7px 13px', textAlign: 'center', minWidth: 70,
-            }}>
-              <div style={{ fontSize: 18, fontWeight: 600 }}>{value}</div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 1 }}>{label}</div>
+
+        {/* status + refresh */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', textAlign: 'right' }}>
+            <div>atualizado às {timeStr}</div>
+            <div style={{ color: countdown <= 10 ? '#ff9f0a' : 'rgba(255,255,255,0.2)' }}>
+              próximo em {countdown}s
             </div>
-          ))}
+          </div>
+          <button
+            onClick={() => fetchData(true)}
+            disabled={refreshing}
+            style={{
+              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 8, padding: '6px 12px', color: 'rgba(255,255,255,0.6)',
+              fontSize: 12, cursor: refreshing ? 'default' : 'pointer',
+              opacity: refreshing ? 0.5 : 1, transition: 'opacity 0.2s',
+            }}
+          >
+            {refreshing ? '...' : '↻ Atualizar'}
+          </button>
         </div>
       </div>
 
-      {/* grid 2 colunas */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+      {/* métricas */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 24 }}>
+        {[
+          { label: 'mercados ativos', value: markets.length },
+          { label: 'alta confiança', value: totalHC },
+          { label: 'fechando em 7d', value: urgent.length },
+          { label: 'sinais ativos', value: signals.length },
+        ].map(({ label, value }) => (
+          <div key={label} style={{
+            background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)',
+            borderRadius: 10, padding: '8px 12px', textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 20, fontWeight: 600 }}>{value}</div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{label}</div>
+          </div>
+        ))}
+      </div>
 
-        {/* ESQUERDA */}
+      {/* grid responsivo */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+        gap: 24,
+      }}>
+
+        {/* APOSTAR AGORA */}
         <div>
           <div style={{ marginBottom: 28 }}>
             <SectionHeader emoji="🎯" title="Apostar agora" subtitle="confiança ≥85% · retorno calculado" count={highConf.length} />
@@ -273,7 +311,7 @@ export default function Radar() {
           </div>
         </div>
 
-        {/* DIREITA */}
+        {/* FECHANDO + VOLUME */}
         <div>
           <div style={{ marginBottom: 28 }}>
             <SectionHeader emoji="🔥" title="Fechando esta semana" count={urgent.length} />
