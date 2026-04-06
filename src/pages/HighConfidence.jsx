@@ -213,7 +213,7 @@ export default function HighConfidence() {
               </span>
               {vol24 && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{vol24}</span>}
               <a
-                href={`https://polymarket.com/event/${m.slug}`}
+                href={`https://polymarket.com/market/${m.slug}`}
                 target="_blank" rel="noreferrer"
                 style={{ marginLeft: 'auto', fontSize: 11, color: '#0a84ff', textDecoration: 'none' }}
               >
