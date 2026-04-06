@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom'
 import Radar from './pages/Radar'
 import Mercados from './pages/Mercados'
+import Resolution from './pages/Resolution'
 import Dashboard from './pages/Dashboard'
 import Sinais from './pages/Sinais'
 import Reversion from './pages/Reversion'
@@ -26,10 +27,11 @@ export default function App() {
           <div style={{ fontWeight: 800, fontSize: 17, letterSpacing: '-0.03em', flexShrink: 0 }}>
             Poly<span style={{ color: '#0a84ff' }}>Signal</span>
           </div>
-          <nav style={{ display: 'flex', gap: 4 }}>
+          <nav style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
             {[
-              { to: '/', label: '⚡ Radar' },
-              { to: '/mercados', label: 'Mercados' },
+              { to: '/',           label: '⚡ Radar'   },
+              { to: '/mercados',   label: 'Mercados'   },
+              { to: '/resolution', label: '⚠️ Regras'  },
             ].map(({ to, label }) => (
               <NavLink key={to} to={to} end style={({ isActive }) => ({
                 padding: '5px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500,
@@ -42,16 +44,17 @@ export default function App() {
           </nav>
         </div>
         <Routes>
-          <Route path="/" element={<Radar />} />
-          <Route path="/mercados" element={<Mercados />} />
-          {/* rotas legadas — acessíveis por URL mas fora do nav */}
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/recommendations" element={<Recommendations />} />
-          <Route path="/closing" element={<ClosingSoon />} />
-          <Route path="/high-confidence" element={<HighConfidence />} />
-          <Route path="/sinais" element={<Sinais />} />
-          <Route path="/anomalies" element={<Anomalies />} />
-          <Route path="/reversion" element={<Reversion />} />
+          <Route path="/"             element={<Radar />} />
+          <Route path="/mercados"     element={<Mercados />} />
+          <Route path="/resolution"   element={<Resolution />} />
+          {/* rotas legadas */}
+          <Route path="/dashboard"      element={<Dashboard />} />
+          <Route path="/recommendations"element={<Recommendations />} />
+          <Route path="/closing"        element={<ClosingSoon />} />
+          <Route path="/high-confidence"element={<HighConfidence />} />
+          <Route path="/sinais"         element={<Sinais />} />
+          <Route path="/anomalies"      element={<Anomalies />} />
+          <Route path="/reversion"      element={<Reversion />} />
         </Routes>
       </div>
     </BrowserRouter>
